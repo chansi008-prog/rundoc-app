@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>런닥</title>
+<meta name="description" content="러너를 위한 주치의: 아픈 부위를 누르면 왜 아픈지, 어떻게 관리할지 알려 줘요">
+<meta name="theme-color" content="#F2F1EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="런닥">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-v3.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-v3.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#F2F1EF;--surface:#FFFFFF;--map:#F8F6F3;--ink:#161514;--ink2:#5D5853;--ink3:#8C867F;--line:#E3E0DB;
+  --coral:#D85A30;--coral-ink:#A8401C;--coral-soft:#FBEAE2;--danger:#B3261E;--danger-soft:#FCE9E7;--ok:#2F6B4F;--ok-soft:#E5F2EA;
+  --m1:#C65A4A;--m2:#DA8170;--tn:#EBDFCB;--bn:#E2D6C2;--st:#8E3B2E;
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --logo:"Black Han Sans","IBM Plex Sans KR",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --ground:#121110;--surface:#1C1B19;--map:#24221F;--ink:#F1EEEA;--ink2:#B0A9A1;--ink3:#7F7871;--line:#33302C;
+  --coral:#EA7A50;--coral-ink:#F4A37F;--coral-soft:#3B2318;--danger:#F2B8B5;--danger-soft:#3E1B19;--ok:#9AD3B4;--ok-soft:#18301F;--st:#5E2219}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --ground:#121110;--surface:#1C1B19;--map:#24221F;--ink:#F1EEEA;--ink2:#B0A9A1;--ink3:#7F7871;--line:#33302C;
+  --coral:#EA7A50;--coral-ink:#F4A37F;--coral-soft:#3B2318;--danger:#F2B8B5;--danger-soft:#3E1B19;--ok:#9AD3B4;--ok-soft:#18301F;--st:#5E2219}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(32px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+.app{max-width:1040px;margin:0 auto;display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:880px){.app{grid-template-columns:minmax(0,420px) minmax(0,1fr);align-items:start}.side{position:sticky;top:12px}}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;grid-column:1/-1}
+header svg{height:44px;width:auto}
+.hbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink2)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.mapcard{padding:12px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--map);border-radius:12px;padding:4px}
+.tabs button{border:0;background:transparent;border-radius:9px;padding:7px 0;font-size:14px;color:var(--ink2)}
+.tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.maphead{display:flex;align-items:center;justify-content:space-between;min-height:40px;margin-top:8px}
+.maphead h2{font-size:17px;font-weight:600;margin:0}
+.back{border:0;background:none;color:var(--ink2);font-size:14px;padding:4px 0;display:flex;align-items:center;gap:4px}
+.stage{background:#F7F7EF;border-radius:14px;overflow:hidden}
+#bd{display:block;width:100%;height:auto;max-height:62vh;touch-action:manipulation}
+.hs{fill:#2A6CF0;fill-opacity:.28;stroke:#1E4FB8;stroke-width:1.6;stroke-dasharray:4 3;cursor:pointer;transition:fill-opacity .15s}
+.hs:hover,.hs:focus{fill-opacity:.55;outline:none}
+.dp circle{fill:#2A6CF0;stroke:#fff;cursor:pointer}
+.side-l{font-size:30px;fill:#8C867F;font-family:var(--sans)}
+.dp text{fill:#fff;font-family:var(--mono);font-weight:500;pointer-events:none}
+.dp.on circle{fill:#D85A30}
+.hint{font-size:13px;color:var(--ink3);text-align:center;margin:8px 0 0}
+.plist{display:grid;gap:6px;margin-top:10px}
+.pbtn{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 12px;font-size:14px}
+.pbtn .n{flex:none;width:22px;height:22px;border-radius:50%;background:#2A6CF0;color:#fff;font-family:var(--mono);font-size:12px;display:grid;place-items:center}
+.pbtn[aria-current="true"]{border-color:var(--coral)}
+.pbtn[aria-current="true"] .n{background:var(--coral)}
+.pbtn small{display:block;color:var(--ink3);font-size:12px}
+.others{margin-top:12px;font-size:13px;color:var(--ink2)}
+.others b{font-weight:600;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;background:var(--surface);color:var(--ink2)}
+button.chip{color:var(--ink)}
+.quick{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px}
+.quick button{border:1px solid var(--coral);color:var(--coral-ink);background:var(--coral-soft);border-radius:999px;padding:5px 12px;font-size:13px}
+.side{display:grid;gap:12px}
+.empty{padding:22px 20px}
+.empty h3{margin:0 0 6px;font-size:18px;font-weight:600;text-wrap:balance}
+.empty p{margin:0;color:var(--ink2)}
+.card{padding:18px 18px 20px}
+.crumb{font-size:12.5px;color:var(--ink3)}
+.card h3{margin:2px 0 0;font-size:23px;font-weight:600;line-height:1.3;text-wrap:balance}
+.aka{color:var(--ink2);font-size:13.5px;margin-top:2px}
+.alert{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--danger-soft);color:var(--danger);font-size:14px;font-weight:500}
+.sec{margin-top:16px}
+.sec h4{margin:0 0 4px;font-size:12.5px;letter-spacing:.04em;color:var(--ink3);font-weight:600}
+.sec p{margin:0}
+.pain{margin-top:16px;border:1px solid var(--line);border-radius:14px;padding:12px}
+.pain label{font-size:13.5px;font-weight:600;display:flex;justify-content:space-between}
+.pain output{font-family:var(--mono);color:var(--coral-ink)}
+.pain input{width:100%;accent-color:var(--coral);margin:8px 0 4px}
+.pain .msg{font-size:13.5px;border-radius:10px;padding:7px 10px}
+.m-ok{background:var(--ok-soft);color:var(--ok)}.m-mid{background:var(--coral-soft);color:var(--coral-ink)}.m-stop{background:var(--danger-soft);color:var(--danger)}
+.path{margin-top:18px;display:grid;gap:0}
+.step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;position:relative;padding-bottom:14px}
+.step:not(:last-child)::before{content:"";position:absolute;left:14px;top:30px;bottom:0;width:2px;background:var(--line)}
+.step .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:13px;background:var(--coral-soft);color:var(--coral-ink);border:1.5px solid var(--coral)}
+.step.ret .num{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.step h5{margin:4px 0 4px;font-size:15px;font-weight:600}
+.step h5 span{font-weight:400;color:var(--ink3);font-size:13px;margin-left:6px}
+.kv{display:grid;gap:6px;font-size:14px}
+.kv div{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px}
+.kv dt{color:var(--ink3);font-size:12.5px;padding-top:1px}
+.kv dd{margin:0}
+.kv ul{margin:0;padding-left:18px}
+.flag{margin-top:6px;padding:12px;border-radius:12px;border:1px solid var(--danger);color:var(--ink)}
+.flag h4{color:var(--danger);margin:0 0 2px;font-size:13px;font-weight:600}
+.book{margin-top:14px;font-size:13px;color:var(--ink2);border-top:1px dashed var(--line);padding-top:12px}
+.book b{font-family:var(--mono);font-weight:500;color:var(--ink)}
+.ask{padding:18px}
+.ask h3{margin:4px 0 12px;font-size:19px;font-weight:600}
+.ask .opts{display:grid;gap:8px}
+.ask .opts button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:15px}
+.ask .opts button:hover{border-color:var(--coral)}
+.info{padding:18px}
+.info h3{margin:0 0 10px;font-size:18px;font-weight:600}
+.info ol{margin:0;padding-left:0;list-style:none;display:grid;gap:12px}
+.info li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px}
+.info li p{margin:2px 0 0;font-size:14px;color:var(--ink2)}
+.rice{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.rice div{background:var(--map);border-radius:10px;padding:8px;font-size:12.5px;text-align:center}
+.rice b{display:block;font-family:var(--logo);font-weight:400;font-size:20px;color:var(--coral)}
+.note{font-size:12.5px;color:var(--ink3);text-align:center;margin:4px 0 0;grid-column:1/-1}
+.banner{grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13.5px;color:var(--ink2)}
+.banner button{margin-left:auto;flex:none;border:0;background:var(--map);border-radius:8px;padding:4px 10px;font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <svg viewBox="0 0 250 100" role="img" aria-label="런닥">
+      <text x="18" y="80" transform="skewX(-14)" transform-origin="18 80" style="font-family:var(--logo);font-size:62px;fill:var(--ink)">런닥</text>
+      <g stroke="#D85A30" stroke-width="6" stroke-linecap="round"><line x1="152" y1="42" x2="222" y2="42"/><line x1="148" y1="58" x2="204" y2="58"/><line x1="144" y1="74" x2="186" y2="74"/></g>
+      <rect x="200" y="6" width="26" height="26" rx="6" fill="#D85A30"/><g stroke="#fff" stroke-width="4" stroke-linecap="round"><line x1="213" y1="12" x2="213" y2="26"/><line x1="206" y1="19" x2="220" y2="19"/></g>
+    </svg>
+    <button class="hbtn" id="infoBtn" aria-expanded="false">치료 3단계</button>
+  </header>
+
+  <div class="banner" id="banner">
+    <span>런닥은 진단이 아닌 참고용 정보예요. 통증이 심하거나 오래가면 병원에 가 보세요.</span>
+    <button id="bannerX">알겠어요</button>
+  </div>
+
+  <section class="panel mapcard" aria-label="인체 지도">
+    <div class="tabs" role="group" aria-label="보기">
+      <button data-v="front" aria-pressed="true">앞</button>
+      <button data-v="back" aria-pressed="false">뒤</button>
+      <button data-v="sole" aria-pressed="false">발바닥</button>
+    </div>
+    <div class="maphead">
+      <button class="back" id="backBtn" hidden>‹ 전신</button>
+      <h2 id="mapTitle">어디가 아파요?</h2>
+      <span style="width:44px"></span>
+    </div>
+    <div class="stage"><svg id="bd" viewBox="0 0 848 1264" role="img" aria-label="인체 해부도"></svg></div>
+    <p class="hint" id="hint">파란 원을 눌러 아픈 부위를 고르세요</p>
+    <div class="plist" id="plist"></div>
+    <div class="others" id="others" hidden></div>
+    <div class="quick" id="quick">
+      <button data-card="cramp">달리다 쥐가 났어요</button>
+    </div>
+  </section>
+
+  <div class="side" id="side">
+    <section class="panel info" id="info" hidden>
+      <h3>치료 3단계</h3>
+      <ol>
+        <li><span class="num" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:13px;background:var(--coral-soft);color:var(--coral-ink);border:1.5px solid var(--coral)">1</span>
+          <div><b>소염 치료</b><p>통증과 염증을 먼저 가라앉혀요. 병원에서는 약물 치료, 소염 주사를 써요.</p>
+            <div class="rice"><div><b>R</b>쉬기</div><div><b>I</b>냉찜질<br>15분</div><div><b>C</b>압박</div><div><b>E</b>다리 올리기</div></div></div></li>
+        <li><span class="num" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:13px;background:var(--coral-soft);color:var(--coral-ink);border:1.5px solid var(--coral)">2</span>
+          <div><b>재생 치료 (병원)</b><p>프롤로 주사, PRP 주사, 체외충격파. 주로 2~3주 넘게 안 낫는 힘줄·근막 통증에 써요.</p></div></li>
+        <li><span class="num" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:13px;background:var(--coral-soft);color:var(--coral-ink);border:1.5px solid var(--coral)">3</span>
+          <div><b>대체 운동</b><p>유산소: 파워 워킹, 자전거, 수영, 수중 달리기<br>근력: 런지, 스쿼트, 데드리프트, 카프 레이즈, V업 복근 운동 (누워서 몸을 비틀며 다리를 번갈아 머리 쪽으로)</p></div></li>
+        <li><span class="num" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:13px;background:var(--ok-soft);color:var(--ok);border:1.5px solid var(--ok)">✓</span>
+          <div><b>다시 달리기</b><p>한 발 서기, 제자리 깡충 뛰기 10번이 아프지 않으면 1분 달리기 + 1분 걷기부터. 1주에 10% 안쪽으로 늘려요.</p></div></li>
+      </ol>
+    </section>
+    <section class="panel" id="out" aria-live="polite">
+      <div class="empty">
+        <h3>뛰고 나서 아픈 곳, 눌러 보세요</h3>
+        <p>부위를 고르면 확대돼요. 더 정확한 지점을 누르면 왜 아픈지, 지금 무엇을 해야 하는지 알려 드려요.</p>
+      </div>
+    </section>
+  </div>
+  <p class="note">런닥 v1</p>
+</div>
+
+<script>
+const IMG={front:'img/front.jpg',back:'img/back.jpg',sole:'img/sole.jpg'};
+const W=848,H=1264;
+const zv=(cx,cy,w)=>[cx-w/2,cy-w*H/W/2,w,w*H/W];
+const VIEWS={
+front:{vb:[0,0,W,H],regions:[
+ {id:'hip',name:'골반 · 고관절',c:[368,610,46],vb:zv(372,615,300),others:['천장관절 통증','건초염·근육 손상','대전자 점액낭염','피로골절','관절와순 손상','고관절 관절염'],pts:[
+  {x:352,y:598,l:'고관절 앞, 사타구니 위',c:'iliopsoas'},
+  {x:408,y:668,l:'사타구니 안쪽',c:'adductor'},
+  {x:303,y:560,l:'골반 바깥 뼈 위쪽',c:'glutmed'},
+  {x:312,y:625,l:'움직일 때 "딱" 소리',c:'snapping'}]},
+ {id:'thigh',name:'허벅지',c:[362,750,46],vb:zv(362,745,270),others:['대퇴근막장근 통증 증후군'],pts:[
+  {x:368,y:752,l:'허벅지 앞',c:'quad'},
+  {x:405,y:695,l:'허벅지 안쪽 위',c:'adductor'},
+  {x:314,y:655,l:'허벅지 바깥 위',c:'tfl'}]},
+ {id:'knee',name:'무릎',c:[356,892,34],vb:zv(358,905,180),others:['베이커씨 낭종','추벽 증후군','퇴행성 관절염','반월상 연골판 파열'],pts:[
+  {x:355,y:880,l:'무릎뼈 주변',c:'pfps'},
+  {x:362,y:938,l:'무릎뼈 바로 아래',c:'patellar'},
+  {x:318,y:895,l:'무릎 바깥',c:'itbs'},
+  {x:396,y:952,l:'무릎 안쪽 아래',c:'pes'}]},
+ {id:'shin',name:'정강이 · 종아리',c:[362,1035,40],vb:zv(362,1030,240),others:['전경골건염','후경골건염','비골 피로골절'],pts:[
+  {x:390,y:1068,l:'정강이 안쪽 아래',ask:'어떻게 아파요?',o:[['5cm 넘게 넓게 욱신거려요','mtss'],['손가락 하나로 짚히는 한 점이 아파요','tibsf']]},
+  {x:374,y:992,l:'정강이뼈 위 한 점',c:'tibsf'},
+  {x:333,y:1012,l:'정강이 바깥 근육',ask:'언제 아파요?',o:[['달리다 보면 터질 듯 조이고 저려요','cecs'],['내리막 뒤 발끝 들 때 당겨요','tibant']]}]},
+ {id:'foot',name:'발 · 발목',c:[354,1182,34],vb:zv(354,1175,190),others:['족근관 증후군','비골건건염','부주상골 동통 증후군'],pts:[
+  {x:350,y:1192,l:'발등 뼈 한 곳',c:'metsf'},
+  {x:322,y:1148,l:'발목 바깥',c:'sprain'},
+  {x:386,y:1150,l:'발목 안쪽',c:'tibpost'},
+  {x:333,y:1228,l:'발가락 사이',c:'morton'}]}
+]},
+back:{vb:[0,0,W,H],regions:[
+ {id:'lowback',name:'허리',c:[430,480,46],vb:zv(430,480,280),others:[],pts:[
+  {x:430,y:505,l:'허리 아래 가운데',c:'lbp'},
+  {x:384,y:455,l:'허리 옆 근육',c:'lbp'},
+  {x:398,y:540,l:'골반과 허리 사이',ask:'어떤 느낌이에요?',o:[['허리 전체가 뻐근하고 무거워요','lbp'],['다리로 저린 느낌이 내려가요','lbpflag']]}]},
+ {id:'glute',name:'엉덩이',c:[368,630,46],vb:zv(372,615,280),others:['대전자 점액낭염','천장관절 통증'],pts:[
+  {x:376,y:640,l:'엉덩이 깊은 곳',c:'piri'},
+  {x:318,y:585,l:'엉덩이 옆 위쪽',c:'glutmed'}]},
+ {id:'ham',name:'허벅지 뒤',c:[365,790,44],vb:zv(365,780,250),others:[],pts:[
+  {x:370,y:718,l:'엉덩이 바로 아래',c:'ham'},
+  {x:364,y:805,l:'허벅지 뒤 가운데',ask:'어떻게 아팠어요?',o:[['스피드 내다가 찌릿했어요','ham'],['달리다 갑자기 딱딱하게 뭉쳤어요','cramp']]}]},
+ {id:'popl',name:'무릎 뒤',c:[362,892,28],vb:zv(362,895,170),others:[],pts:[
+  {x:362,y:892,l:'오금 (무릎 뒤 가운데)',c:'baker'}]},
+ {id:'calf',name:'종아리',c:[356,980,40],vb:zv(356,1000,230),others:['후경골건염'],pts:[
+  {x:378,y:962,l:'종아리 가운데·안쪽',ask:'어떻게 아팠어요?',o:[['누가 찬 것처럼 찌릿했어요','calf'],['달리다 갑자기 딱딱하게 뭉쳤어요','cramp'],['달릴 때마다 터질 듯 조여요','cecs']]},
+  {x:360,y:1055,l:'종아리 아래',c:'calf'}]},
+ {id:'achilles',name:'아킬레스건 · 뒤꿈치',c:[354,1155,34],vb:zv(354,1160,180),others:['종골전 점액낭염','종골 피로골절'],pts:[
+  {x:356,y:1125,l:'뒤꿈치 위 2~6cm',c:'achilles'},
+  {x:352,y:1188,l:'힘줄이 뒤꿈치에 붙는 곳',c:'achilles'}]}
+]},
+sole:{vb:[0,0,W,H],regions:null,others:['족근관 증후군','종골 피로골절','부주상골 동통 증후군'],pts:[
+  {x:345,y:1000,l:'뒤꿈치 안쪽 앞',c:'pf'},
+  {x:425,y:1110,l:'뒤꿈치 가운데',ask:'언제 제일 아파요?',o:[['아침 첫발 디딜 때 찌르듯','pf'],['하루 종일 멍든 것처럼 욱신','heelpad']]},
+  {x:285,y:700,l:'발 아치 안쪽',c:'pf'},
+  {x:525,y:330,l:'3·4번째 발가락 사이',c:'morton'},
+  {x:425,y:455,l:'발 앞쪽 뼈 한 곳',c:'metsf'},
+  {x:298,y:115,l:'발톱 · 물집 · 굳은살',c:'skin'}]}
+};
+
+const C={
+itbs:{n:'장경인대 마찰 증후군',a:'ITBS · 장경인대염',feel:'달린 지 몇 km 지나면 무릎 바깥이 찌릿하게 쓸려요. 무릎을 30도쯤 굽혔다 펼 때 아픈 게 특징이고, 내리막에서 심해요.',why:'장경인대는 엉덩이에서 무릎 바깥을 지나 정강이뼈에 붙는 두꺼운 근막이에요. 무릎을 30도쯤 굽힐 때 허벅지뼈 바깥과 가장 가깝게 닿아서, 굽혔다 펴기를 반복하면 자극이 쌓여요. 엉덩이 옆 근육이 약하거나 갑자기 거리를 늘려도 생겨요.',
+ home:'3~5일 달리기 쉬기, 냉찜질. 다시 달릴 땐 통증 오기 전 거리까지만.',regen:'보통 필요 없어요. 3주 넘게 안 나으면 체외충격파를 쓰기도 해요.',cardio:'수영, 수중 달리기. 자전거도 무릎을 계속 굽혔다 펴니 아프지 않을 때만',fit:['클램쉘','사이드 플랭크','한 발 브릿지','엉덩이 옆·허벅지 바깥 폼롤러 (무릎 바로 위는 세게 누르지 않기)'],ret:'30분 빠르게 걷기와 계단이 아프지 않으면. 처음엔 평지에서 짧게.',flag:'걸을 때도 아프거나 3주 넘게 안 나을 때'},
+pfps:{n:'슬개대퇴 동통 증후군',a:'러너스 니',feel:'무릎뼈 뒤나 주변이 묵직하게 아파요. 계단 내려갈 때, 오래 앉았다 일어날 때, 내리막에서 심해져요.',why:'엉덩이와 허벅지 근육이 약하면 착지할 때 무릎이 안쪽으로 무너지고, 무릎뼈가 한쪽으로 눌려요. 갑자기 거리를 늘리거나 내리막을 많이 달려도 생겨요.',
+ home:'내리막과 계단 줄이기. 통증 점수 3 이하로 거리 조절, 아플 때 냉찜질.',regen:'보통 필요 없어요. 근력 운동이 가장 중요한 치료예요.',cardio:'수영(자유형), 수중 달리기. 자전거는 안장을 높여 무릎을 덜 굽히면 가능',fit:['클램쉘','사이드 레그 레이즈','월 스쿼트 (무릎 각도 얕게)','허벅지 앞 폼롤러'],ret:'계단 내려갈 때와 한 발 스쿼트가 아프지 않으면.',flag:'무릎이 붓거나, 걸리는 느낌·빠지는 느낌이 있을 때'},
+patellar:{n:'슬개건염',a:'슬개건병증 · 점퍼스 니',feel:'무릎뼈 아래 힘줄을 누르면 아파요. 시작할 때 아프다가 몸이 풀리면 줄고, 끝나고 다시 아파요.',why:'무릎뼈와 정강이뼈를 잇는 힘줄에 당기는 힘이 반복해서 쌓여 아주 작은 손상과 변성이 생긴 상태예요. 염증보다는 힘줄이 지친 상태에 가까워요. 언덕, 계단, 점프 훈련에서 많이 생겨요.',
+ home:'언덕과 인터벌 잠시 쉬기. 평지에서 천천히는 통증 3 이하면 괜찮아요.',regen:'오래가는 힘줄 통증이라 잘 맞는 편이에요. 체외충격파, PRP 주사, 프롤로 주사.',cardio:'수영, 수중 달리기, 평지 자전거 (언덕·점프 없이)',fit:['월싯 30~45초 × 5','천천히 내려가는 스쿼트','허벅지 앞 스트레칭'],ret:'한 발 스쿼트와 제자리 점프가 아프지 않으면.',flag:'6주 넘게 계속되거나 힘줄이 부어 있을 때'},
+pes:{n:'거위발 건염',a:'',feel:'무릎 안쪽에서 5cm쯤 아래를 누르면 아파요. 계단 오를 때, 다리를 꼬고 잘 때 아파요.',why:'허벅지 안쪽과 뒤쪽 근육 힘줄 3개가 모이는 곳에 마찰이 생겨요. 무릎이 안쪽으로 모이는 자세, 평발 경향과 관련 있어요.',
+ home:'냉찜질, 잘 때 무릎 사이에 베개 끼우기.',regen:'오래가면 체외충격파, 프롤로 주사.',cardio:'수영(평영 발차기 피하기), 수중 달리기, 자전거',fit:['햄스트링·허벅지 안쪽 스트레칭','클램쉘','무릎 각도 얕은 스쿼트'],ret:'계단 오르기와 누르기 통증이 거의 없으면.',flag:'무릎 안쪽이 눈에 띄게 붓거나 열이 날 때'},
+mtss:{n:'경골 과로성 골막염',a:'신스플린트 · MTSS',feel:'정강이뼈 안쪽을 따라 5cm 넘게 넓게 욱신거려요. 달리기 시작할 때 아프다가 풀리기도 해요.',why:'거리나 횟수를 갑자기 늘리거나, 딱딱한 길, 닳은 신발, 초보 러너에게 흔해요. 뼈와 주변 막에 반복 충격이 쌓인 상태예요.',
+ home:'1~2주 달리기 줄이기, 아픈 곳 냉찜질.',regen:'보통 필요 없어요. 오래가면 체외충격파를 쓰기도 해요.',cardio:'자전거, 수영, 수중 달리기, 일립티컬 (충격 없는 운동)',fit:['카프 레이즈 (천천히 내리기)','발가락으로 수건 당기기','종아리 스트레칭'],ret:'걷기와 제자리 깡충 뛰기가 아프지 않으면. 부드러운 길에서 짧게.',flag:'아픈 곳이 한 점으로 좁아지거나 쉬어도 아플 때 (피로골절 의심)'},
+cecs:{n:'운동 유발성 구획 증후군',a:'',feel:'달리기 시작하고 일정 시간이 지나면 다리가 터질 듯 조이고 아파요. 저리거나 발에 힘이 빠지기도 하고, 멈추고 10~20분 지나면 사라져요.',why:'근육은 단단한 막으로 둘러싸인 칸(구획) 안에 있어요. 운동하면 근육이 부풀어 오르는데 막이 늘어나지 않아 칸 안의 압력이 높아져요.',
+ home:'증상이 나타나면 바로 멈추기.',regen:'해당 없어요. 검사 후 필요하면 의사와 수술 여부를 상의해요.',cardio:'자전거, 수영. 증상이 나지 않는 강도에서만',fit:[],ret:'의사와 상의 후.',flag:'같은 증상이 반복되면 병원에서 구획 압력 검사를 받아 보세요. 운동을 멈춰도 통증이 계속되면 바로 응급실',urgent:'반복되면 병원 검사가 필요해요'},
+calf:{n:'종아리 근육 염좌',a:'테니스 레그',feel:'달리다 갑자기 누가 찬 것처럼 찌릿하거나, 서서히 단단하게 뭉쳐요. 까치발 들 때 아파요.',why:'속도를 갑자기 올리거나, 언덕, 쿠션 낮은 신발로 바꿨을 때, 피로가 쌓였을 때 생겨요.',
+ home:'처음 2~3일 냉찜질·압박, 걷기만. 뒤꿈치 깔창을 살짝 넣으면 편해요.',regen:'보통 필요 없어요. 많이 찢어졌으면 의사가 PRP 주사를 권하기도 해요.',cardio:'상체 운동, 수영(발차기 약하게). 걷기가 편해지면 자전거',fit:['카프 레이즈 (무릎 펴고 / 굽히고)','종아리 스트레칭 가볍게'],ret:'한 발 까치발 15번, 제자리 깡충 뛰기가 아프지 않으면.',flag:'멍이 크게 들거나 까치발이 안 될 때'},
+tibsf:{n:'정강이 피로골절',a:'의심',feel:'손가락 하나로 짚히는 한 곳이 아파요. 달릴수록 심해지고, 나중엔 걸을 때나 밤에도 아파요.',why:'근육과 인대가 충격을 흡수해 주는데, 근육이 지치면 충격이 뼈로 바로 가요. 회복할 시간 없이 반복되면 뼈에 아주 작은 금이 생겨요. 정강이뼈 앞쪽은 잘 낫지 않는 고위험군, 뒤안쪽은 비교적 잘 낫는 저위험군이에요.',
+ home:'달리기를 바로 멈추세요. 엑스레이로 안 보일 수 있어 MRI가 필요할 때도 있어요.',regen:'해당 없어요. 의사 치료를 따르세요.',cardio:'의사가 허락한 범위에서 수영, 수중 달리기, 상체 운동',fit:[],ret:'의사 확인 후 (보통 6~8주 이상).',flag:'정강이뼈 앞쪽이 아프면 더 서둘러 병원에 가세요',urgent:'달리기를 멈추고 병원(정형외과·스포츠의학과)에 가세요'},
+tibant:{n:'전경골근 건염',a:'정강이 앞 근육 긴장',feel:'발끝을 들어 올릴 때 정강이 앞 근육이 당기고 뻐근해요.',why:'내리막을 많이 달리거나, 신발 끈을 너무 꽉 묶거나, 뒤꿈치로 세게 착지할 때 생겨요.',
+ home:'신발 끈 느슨하게, 2~3일 거리 줄이기, 냉찜질.',regen:'보통 필요 없어요.',cardio:'자전거, 수영',fit:['무릎 꿇고 앉아 발등 펴기 스트레칭','정강이 앞 가볍게 마사지'],ret:'발끝 들기와 걷기가 아프지 않으면.',flag:'달릴 때 터질 듯 조이고 저리면 구획 증후군 확인',short:true},
+pf:{n:'족저근막염',a:'',feel:'아침에 일어나 첫발 디딜 때 뒤꿈치 안쪽 아래가 찌르듯 아파요. 조금 걸으면 줄었다가 오래 서 있으면 다시 아파요.',why:'발바닥을 받치는 두꺼운 막에 부담이 쌓여요. 종아리가 뻣뻣하거나, 갑자기 거리 증가, 쿠션 닳은 신발, 체중 증가와 관련 있어요.',
+ home:'아침 첫발 딛기 전, 오래 앉았다 일어나기 전에 스트레칭 먼저. 맨발로 다니지 않기. 부드러운 힐컵, 잘 때 쓰는 보조기.',hosp:'소염 주사는 효과가 빠르지만 지방 패드 위축, 근막 파열 같은 부작용이 있어 신중해야 해요.',regen:'보존 치료에 반응이 없으면 체외충격파. PRP, 프롤로 주사를 쓰기도 해요.',cardio:'수중 달리기, 자전거, 수영, 인라인 스케이트, 로잉머신',fit:['족저근막 스트레칭 (가장 중요): 앉아서 아픈 발을 반대쪽 무릎에 올리고 발가락을 발등 쪽으로 당겨 15~20초 × 15번','바닥의 수건을 발가락으로 집어 올리기','계단 끝에서 카프 레이즈'],ret:'아침 첫발 통증이 거의 없어지면. 회복이 몇 달 걸리기도 해요.',flag:'3개월 넘게 계속되거나 뒤꿈치가 붓고 열이 날 때'},
+achilles:{n:'아킬레스건염',a:'아킬레스건병증',feel:'아침에 뒤꿈치 위가 뻣뻣하고, 달리기 시작할 때 아프다가 풀려요. 힘줄이 두꺼워지거나 혹처럼 만져지기도 해요.',why:'종아리의 두 근육(비복근·가자미근)이 합쳐져 뒤꿈치뼈에 붙는 힘줄이에요. 뒤꿈치 위 2~6cm(비부착성)에 더 흔해요. 나이가 들면 혈류가 줄어 회복이 늦고, 많이 달릴수록, 스피드 훈련을 할수록 위험이 커요.',
+ home:'언덕과 스피드 쉬기. 완전히 쉬는 것보다 통증 3 이하의 적당한 부하가 회복에 좋아요.',regen:'오래가는 힘줄 통증이라 잘 맞는 편이에요. 체외충격파, PRP 주사.',cardio:'수영, 수중 달리기, 자전거 (페달은 발 가운데로)',fit:['천천히 내려가는 카프 레이즈: 계단 끝에서 무릎 펴고 / 굽히고 15번 × 3세트','종아리 스트레칭'],ret:'한 발 까치발 25번, 한 발 깡충 뛰기가 아프지 않으면. 3개월 이상 걸리기도 해요.',flag:'뚝 소리와 함께 뒤에서 차인 느낌, 까치발이 안 되면 파열 의심 → 바로 병원'},
+sprain:{n:'족관절 염좌',a:'발목 염좌',feel:'접질린 뒤 바깥 복숭아뼈 앞이 붓고 멍이 들어요.',why:'울퉁불퉁한 길, 트레일, 피곤해서 발이 끌릴 때 발목이 안쪽으로 꺾이며 인대가 늘어나거나 찢어져요.',
+ home:'처음 48시간 RICE. 아프지 않은 범위에서 일찍 걷기 시작하면 회복이 빨라요.',regen:'자주 접질려 발목이 헐거워졌으면 프롤로, PRP 주사를 쓰기도 해요.',cardio:'처음엔 상체 운동과 수영, 걷기가 편해지면 자전거',fit:['발목으로 알파벳 쓰기','한 발 서기 30초 → 눈 감고','밴드로 발목 바깥 밀기'],ret:'한 발 서기 30초, 한 발 깡충 뛰기가 아프지 않으면.',flag:'네 걸음도 못 걷겠거나 복숭아뼈 뒤 뼈를 누르면 아플 때 (골절 확인)'},
+morton:{n:'지간신경종',a:'모턴 신경종',feel:'발 앞쪽이 화끈거리거나 저리고, 신발 속에 돌멩이가 있는 느낌이에요. 신발을 벗고 주무르면 나아져요.',why:'발 앞쪽이 좁은 신발에 눌리면서 발가락 사이 신경이 압박돼요. 주로 3·4번째 발가락 사이예요.',
+ home:'앞코가 넓은 신발로 바꾸기, 끈은 앞쪽을 느슨하게.',regen:'해당 없어요. 오래가면 의사와 상의해요.',cardio:'자전거, 수영 (발 앞쪽에 체중이 덜 실리는 운동)',fit:[],ret:'신발을 바꾸고 저림이 없으면.',flag:'저림이 계속되거나 점점 심해질 때'},
+quad:{n:'대퇴사두근 손상',a:'',feel:'스피드를 내거나 내리막에서 허벅지 앞이 찌릿해요. 대회 뒤 2~3일 계단 내려가기 힘든 뻐근함은 지연성 근육통으로 3~5일 안에 나아요.',why:'내리막에서 근육이 늘어나며 버티느라 작은 손상이 생겨요. 갑자기 속도를 올리거나 워밍업이 부족해도 생겨요.',
+ home:'가볍게 걷기, 폼롤러. 찌릿하고 멍이 들면 냉찜질.',regen:'보통 필요 없어요.',cardio:'수영, 가벼운 자전거',fit:['런지 (아프지 않은 깊이)','스쿼트'],ret:'계단과 가볍게 뛰기가 아프지 않으면.',flag:'한쪽만 심하게 붓고 아프거나 소변이 콜라색이면 바로 병원'},
+ham:{n:'햄스트링 손상',a:'',feel:'스피드를 낼 때 허벅지 뒤가 갑자기 찌릿해요.',why:'빠른 속도, 부족한 워밍업, 피로가 원인이에요. 특히 햄스트링이 허벅지 앞 근육보다 많이 약하면 잘 다쳐요.',
+ home:'처음 2~3일 냉찜질, 아프지 않게 걷기. 세게 스트레칭하지 않기.',regen:'많이 찢어졌거나 자꾸 재발하면 PRP 주사를 쓰기도 해요.',cardio:'수영(발차기 약하게), 가벼운 자전거',fit:['브릿지 → 한 발 브릿지','노르딕 햄스트링: 무릎 꿇고 발목 고정, 몸을 천천히 앞으로 내렸다 올라오기','엉덩이 펴기 운동','데드리프트 (가볍게)'],extra:'재발 방지에는 유연성보다 천천히 늘어나며 버티는 근력 운동(편심성)이 중요해요. 햄스트링 힘을 허벅지 앞의 70% 이상으로 유지하세요.',ret:'빠르게 걷기, 가볍게 다리 차올리기가 아프지 않으면. 스피드는 맨 마지막.',flag:'뚝 소리, 넓은 멍, 다리를 굽히기 힘들 때'},
+adductor:{n:'내전근 손상',a:'',feel:'방향을 틀거나 속도를 올릴 때 허벅지 안쪽 위가 찌릿해요.',why:'미끄러운 길, 갑작스러운 방향 전환, 허벅지 안쪽 근육이 약할 때 생겨요.',
+ home:'2~3일 냉찜질, 다리 벌리는 동작 피하기.',regen:'보통 필요 없어요.',cardio:'자전거, 수영(평영 발차기 피하기)',fit:['무릎 사이에 공 끼고 누르기','코펜하겐 플랭크 (쉬운 단계부터)'],ret:'옆으로 걷기와 방향 전환이 아프지 않으면.',flag:'멍이 넓게 들거나 걸을 때도 아플 때'},
+glutmed:{n:'중둔근건염',a:'골반 바깥 통증',feel:'아픈 쪽으로 누우면 골반 바깥이 아파요. 계단 오를 때, 한 발로 서 있을 때 아파요.',why:'엉덩이 옆 근육 힘줄에 부담이 쌓여요. 다리를 꼬고 서거나 앉는 습관, 엉덩이 근육 약함과 관련 있어요.',
+ home:'다리 꼬지 않기, 아픈 쪽으로 눕지 않기 (무릎 사이 베개).',regen:'오래가면 체외충격파, PRP 주사.',cardio:'수영, 수중 달리기, 파워 워킹 (평지)',fit:['벽에 대고 버티는 사이드 레그 프레스','클램쉘','사이드 플랭크'],ret:'한 발 서기 30초와 계단이 아프지 않으면.',flag:'6주 넘게 계속될 때'},
+iliopsoas:{n:'장요근건염',a:'고관절 앞 통증',feel:'오르막이나 다리를 높이 들 때 사타구니 위쪽이 당겨요.',why:'언덕, 스피드 훈련을 많이 하거나, 오래 앉아서 고관절 앞이 짧아진 상태로 달리면 생겨요.',
+ home:'언덕과 스피드 쉬기.',regen:'오래가면 체외충격파를 쓰기도 해요.',cardio:'수영, 파워 워킹 (다리를 높이 드는 동작 피하기)',fit:['런지 자세로 고관절 앞 스트레칭','브릿지','누워서 천천히 다리 들기'],ret:'오르막 걷기와 무릎 높이 들기가 아프지 않으면.',flag:'사타구니 깊은 곳이 아프고 체중을 실을 때 심해지면 허벅지뼈 목 부분 피로골절 확인'},
+piri:{n:'이상근 증후군',a:'',feel:'엉덩이 깊은 곳이 뻐근하고 오래 앉아 있으면 심해져요. 다리 뒤로 저린 느낌이 내려가기도 해요.',why:'엉덩이 안쪽 작은 근육(이상근)이 뭉쳐 그 아래 좌골신경을 누를 수 있어요.',
+ home:'오래 앉지 않기, 엉덩이 마사지볼.',regen:'보통 필요 없어요.',cardio:'수영, 파워 워킹 (오래 앉는 자전거는 짧게)',fit:['누워서 4자 스트레칭','클램쉘','브릿지'],ret:'앉아 있기와 계단이 편하면.',flag:'저림이 무릎 아래까지 내려가거나 힘이 빠질 때 (허리 디스크 확인)'},
+snapping:{n:'발음성 고관절',a:'스내핑 힙',feel:'다리를 움직일 때 고관절에서 "딱" 소리가 나거나 걸리는 느낌이 나요. 통증이 없을 때도 많아요.',why:'힘줄이나 근막이 뼈 돌출부 위를 넘어가면서 튕기는 거예요.',
+ home:'아프지 않으면 크게 걱정하지 않아도 돼요. 아프면 고관절 바깥·앞 스트레칭.',regen:'보통 필요 없어요.',cardio:'아프지 않으면 평소대로, 아프면 수영',fit:['고관절 앞·바깥 스트레칭','클램쉘'],ret:'통증이 없으면 계속 달려도 돼요.',flag:'통증과 함께 관절 안에서 걸려 움직임이 막힐 때 (관절와순 손상 확인)'},
+lbp:{n:'러너 요통',a:'허리 통증',feel:'장거리 후반이나 다 뛰고 나서 허리가 뻐근하고 무거워요. 오래 앉았다 일어날 때 더 굳어 있어요.',why:'코어와 엉덩이 근육이 지치면 허리가 그 일을 대신해요. 고관절 앞이 뻣뻣하거나, 발을 몸보다 멀리 내딛는 습관도 허리에 충격을 더해요.',
+ home:'가볍게 걷기, 따뜻한 찜질 (근육 뭉침은 온찜질). 누워 있는 것보다 움직이는 게 빨리 나아요.',regen:'보통 필요 없어요.',cardio:'파워 워킹, 수영(자유형·배영), 수중 걷기',fit:['버드독','데드버그','플랭크','브릿지','V업 복근 운동 (아프지 않을 때)'],ret:'허리 숙이기가 편하고 30분 빠르게 걷기가 아프지 않으면. 보폭은 짧게.',flag:'다리로 저림이 내려가거나 힘이 빠질 때, 밤에도 계속 아플 때. 소변·대변 조절이 안 되면 바로 응급실'},
+lbpflag:{n:'허리 + 다리 저림',a:'신경 압박 의심',feel:'허리나 엉덩이에서 다리 뒤로 저린 느낌이 내려가요.',why:'허리 디스크나 엉덩이 근육이 신경을 누를 때 생길 수 있어요. 엉덩이 깊은 곳만 뻐근하면 이상근 증후군일 수도 있어요.',
+ home:'오래 앉지 않기, 아프지 않은 범위에서 걷기.',regen:'의사 진단에 따라요.',cardio:'파워 워킹, 수중 걷기 (저림이 없는 범위)',fit:[],ret:'의사와 상의 후.',flag:'저림이 무릎 아래까지 내려가거나 힘이 빠질 때',urgent:'저림이 계속되면 병원에서 허리 검사를 받아 보세요. 소변·대변 조절이 안 되면 바로 응급실',short:true},
+cramp:{n:'근육 경련',a:'쥐',feel:'근육이 갑자기 돌처럼 딱딱하게 수축하며 아파요. 대회 후반 30km 이후에 많이 생겨요.',why:'근육 피로가 가장 큰 원인이에요. 훈련보다 빠른 페이스, 평소보다 긴 거리, 더운 날 땀을 많이 흘렸을 때 잘 생겨요.',
+ home:'멈추고 천천히 늘려 주세요. 종아리는 무릎 펴고 발끝을 몸 쪽으로, 허벅지 뒤는 다리 펴고 상체 숙이기. 풀리면 걷다가 천천히 다시 뛰기. 물과 전해질 보충.',regen:'해당 없어요.',cardio:'보통 필요 없어요. 다음 날 아프면 하루 가벼운 자전거나 걷기',fit:['다음 날 폼롤러, 가벼운 스트레칭'],extra:'예방: 대회 페이스를 훈련에서 미리 연습하기, 장거리 훈련으로 근지구력 키우기, 장거리·더운 날엔 전해질 챙기기, 초반 오버페이스 피하기.',ret:'풀리고 통증이 없으면 바로 가능.',flag:'쥐가 아주 자주 나거나 쉬어도 날 때. 풀린 뒤에도 심하게 붓고 소변이 콜라색이면 바로 응급실'},
+metsf:{n:'중족골 피로골절',a:'의심',feel:'발등 뼈 한 곳이 붓고, 누르면 아파요. 달릴수록 심해져요.',why:'정강이 피로골절과 같은 원리예요. 갑자기 늘어난 훈련량, 아주 얇은 신발로 바꿈, 에너지 부족이 원인이에요. 2번째 발가락 뼈 목 부분과 3·4번째에 많아요.',
+ home:'달리기를 바로 멈추세요.',regen:'해당 없어요. 의사 치료를 따르세요.',cardio:'의사가 허락한 범위에서 수영, 상체 운동',fit:[],ret:'의사 확인 후 (보통 6~8주).',flag:'붓고 누르면 아픈 한 점이 있으면 바로 병원',urgent:'달리기를 멈추고 병원에 가세요',short:true},
+tibpost:{n:'후경골근건염',a:'',feel:'안쪽 복숭아뼈 뒤아래를 따라 아프고 붓기도 해요. 발 아치가 내려앉는 느낌이 들 수 있어요.',why:'발 아치를 받치는 힘줄에 부담이 쌓여요. 평발 경향, 발이 안쪽으로 많이 무너지는 주법과 관련 있어요.',
+ home:'거리 줄이기, 아치를 받쳐 주는 신발이나 깔창.',regen:'오래가면 체외충격파.',cardio:'자전거, 수영',fit:['카프 레이즈 (뒤꿈치를 안쪽으로 모으며)','밴드로 발 안쪽으로 당기기'],ret:'한 발 까치발 10번이 아프지 않으면.',flag:'아치가 눈에 띄게 낮아지거나 한 발 까치발이 안 될 때',short:true},
+baker:{n:'베이커씨 낭종',a:'',feel:'무릎 뒤 오금이 붓고 땅기는 느낌이에요. 무릎을 끝까지 굽히거나 펼 때 불편해요.',why:'무릎 관절 안의 액체가 뒤쪽 주머니에 고여 혹처럼 부풀어요. 관절 안의 다른 문제(연골판 등)와 함께 오는 경우가 많아요.',
+ home:'냉찜질, 무릎을 무리하게 굽히는 동작 피하기.',regen:'의사 진단에 따라요.',cardio:'수영, 자전거 (아프지 않으면)',fit:[],ret:'붓기와 통증이 없으면.',flag:'종아리까지 갑자기 붓고 아프면 바로 병원 (낭종 파열이나 혈전 확인)',short:true},
+tfl:{n:'대퇴근막장근 통증 증후군',a:'',feel:'골반 앞 바깥, 허벅지 바깥 위가 뻐근하고 당겨요.',why:'허벅지 바깥 위 작은 근육이 장경인대를 당기며 지쳐요. 엉덩이 옆 근육이 약하면 대신 일을 많이 해요.',
+ home:'폼롤러, 2~3일 거리 줄이기.',regen:'보통 필요 없어요.',cardio:'수영, 자전거',fit:['클램쉘','사이드 플랭크','고관절 앞·바깥 스트레칭'],ret:'아프지 않으면.',flag:'3주 넘게 계속될 때',short:true},
+heelpad:{n:'발뒤꿈치 통증',a:'지방 패드 통증',feel:'뒤꿈치 가운데가 하루 종일 멍든 것처럼 욱신거려요. 딱딱한 바닥에서 심해요.',why:'뒤꿈치 아래 충격을 받아 주는 지방 패드가 얇아지거나 눌려서 생겨요.',
+ home:'부드러운 힐컵, 쿠션 좋은 신발, 딱딱한 바닥에서 맨발 피하기.',regen:'해당 없어요.',cardio:'자전거, 수영, 수중 달리기',fit:[],ret:'걸을 때 통증이 없으면.',flag:'뒤꿈치를 옆에서 눌러도 아프면 종골 피로골절 확인',short:true},
+skin:{n:'발톱 손상 · 물집 · 굳은살',a:'',feel:'발톱이 검게 멍들거나, 물집이 잡히거나, 굳은살이 아파요.',why:'신발이 작거나 커서 발이 밀리고 쓸릴 때, 내리막에서 발가락이 신발 앞에 부딪힐 때 생겨요.',
+ home:'물집은 터뜨리지 말고 보호 패드. 발톱 아래 피가 고여 아프면 병원. 발톱은 일자로 짧게.',regen:'해당 없어요.',cardio:'아프지 않으면 평소대로',fit:[],ret:'아프지 않으면.',flag:'붉게 붓고 열이 나거나 고름이 나올 때 (감염)',short:true}
+};
+
+let view='front',region=null,curVB=[0,0,200,420],activePt=null;
+const bd=document.getElementById('bd'),plist=document.getElementById('plist'),out=document.getElementById('out'),othersEl=document.getElementById('others');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function animVB(to){
+  if(reduce){curVB=to.slice();bd.setAttribute('viewBox',to.join(' '));return}
+  const fr=curVB.slice(),t0=performance.now();
+  function st(t){let k=Math.min(1,(t-t0)/480);k=1-Math.pow(1-k,3);curVB=fr.map((v,i)=>v+(to[i]-v)*k);bd.setAttribute('viewBox',curVB.join(' '));if(k<1)requestAnimationFrame(st)}
+  requestAnimationFrame(st);
+}
+const NS='http://www.w3.org/2000/svg';
+function draw(){
+  const V=VIEWS[view];
+  bd.innerHTML=`<image href="${IMG[view]}" x="0" y="0" width="${W}" height="${H}"/>`+(view==='sole'?'<text x="130" y="640" class="side-l">안쪽</text><text x="690" y="640" class="side-l">바깥</text>':'')+'<g id="lay"></g>';
+  const lay=bd.querySelector('#lay');
+  if(V.regions&&!region){
+    V.regions.forEach(r=>{const c=document.createElementNS(NS,'circle');c.setAttribute('class','hs');c.setAttribute('cx',r.c[0]);c.setAttribute('cy',r.c[1]);c.setAttribute('r',r.c[2]);c.setAttribute('vector-effect','non-scaling-stroke');c.setAttribute('tabindex','0');c.setAttribute('role','button');c.setAttribute('aria-label',r.name);
+      c.addEventListener('click',()=>openRegion(r));c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openRegion(r)}});lay.appendChild(c)});
+  } else {
+    const pts=region?region.pts:V.pts,w=(region?region.vb:V.vb)[2],r=Math.max(9,w*.04);
+    pts.forEach((p,i)=>{const g=document.createElementNS(NS,'g');g.setAttribute('class','dp'+(activePt===i?' on':''));
+      g.innerHTML=`<circle cx="${p.x}" cy="${p.y}" r="${r}" stroke-width="${r*.18}"/><text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" font-size="${r*1.1}">${i+1}</text>`;
+      g.addEventListener('click',()=>pick(i));lay.appendChild(g)});
+  }
+}
+function setHead(){
+  const V=VIEWS[view],back=document.getElementById('backBtn'),t=document.getElementById('mapTitle'),h=document.getElementById('hint');
+  back.hidden=!region; t.textContent=region?region.name:(view==='sole'?'발바닥':'어디가 아파요?');
+  h.textContent=(region||!V.regions)?'번호를 누르거나 아래 목록에서 골라요':'파란 원을 눌러 아픈 부위를 고르세요';
+  const pts=region?region.pts:(V.regions?null:V.pts);
+  plist.innerHTML='';
+  if(pts) pts.forEach((p,i)=>{const b=document.createElement('button');b.className='pbtn';b.setAttribute('aria-current',activePt===i);
+    const nm=p.c?C[p.c].n:'질문 1개로 좁혀요';
+    b.innerHTML=`<span class="n">${i+1}</span><span>${p.l}<small>${nm}</small></span>`;b.onclick=()=>pick(i);plist.appendChild(b)});
+  const oth=region?region.others:(V.regions?null:V.others);
+  if(oth&&oth.length){othersEl.hidden=false;othersEl.innerHTML='<b>그 외</b> · 이 부위에서 생길 수 있는 다른 증상<div class="chips">'+oth.map(o=>`<span class="chip">${o}</span>`).join('')+'</div>'}
+  else othersEl.hidden=true;
+}
+function openRegion(r){region=r;activePt=null;draw();setHead();animVB(r.vb)}
+function closeRegion(){region=null;activePt=null;draw();setHead();animVB(VIEWS[view].vb)}
+function setView(v){view=v;region=null;activePt=null;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
+  curVB=VIEWS[v].vb.slice();bd.setAttribute('viewBox',curVB.join(' '));draw();setHead();}
+function crumb(p){const V=VIEWS[view];const vn={front:'앞',back:'뒤',sole:'발바닥'}[view];return [vn,region?region.name:null,p.l].filter(Boolean).join(' · ')}
+function pick(i){
+  activePt=i;const p=(region?region.pts:VIEWS[view].pts)[i];draw();setHead();
+  if(p.c) showCard(p.c,crumb(p)); else showAsk(p);
+}
+function showAsk(p){
+  out.innerHTML=`<div class="ask"><div class="crumb">${crumb(p)}</div><h3>${p.ask}</h3><div class="opts">${p.o.map((o,j)=>`<button data-j="${j}">${o[0]}</button>`).join('')}</div></div>`;
+  out.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>showCard(p.o[b.dataset.j][1],crumb(p)+' · '+p.o[b.dataset.j][0]));
+  reveal();
+}
+function li(a){return '<ul>'+a.map(x=>`<li>${x}</li>`).join('')+'</ul>'}
+function showCard(id,cr){
+  const c=C[id];
+  const book='';
+  out.innerHTML=`<article class="card">
+    <div class="crumb">${cr||''}</div>
+    <h3>${c.n}</h3>${c.a?`<div class="aka">${c.a}</div>`:''}
+    ${c.urgent?`<div class="alert">⚠ ${c.urgent}</div>`:''}
+    <div class="sec"><h4>이렇게 아파요</h4><p>${c.feel}</p></div>
+    <div class="sec"><h4>왜 아플까</h4><p>${c.why}</p></div>
+    ${c.urgent?'':`<div class="pain"><label for="painR">지금 통증은? <output id="painO">3</output></label><input type="range" id="painR" min="0" max="10" step="1" value="3"><div class="msg" id="painM"></div></div>`}
+    <div class="path">
+      <div class="step"><span class="num">1</span><div><h5>소염<span>통증 가라앉히기</span></h5><dl class="kv"><div><dt>집에서</dt><dd>${c.home}</dd></div>${c.hosp?`<div><dt>병원</dt><dd>${c.hosp}</dd></div>`:''}</dl></div></div>
+      <div class="step"><span class="num">2</span><div><h5>재생<span>병원 치료</span></h5><dl class="kv"><div><dt>해당 여부</dt><dd>${c.regen}</dd></div></dl></div></div>
+      <div class="step"><span class="num">3</span><div><h5>대체 운동<span>달리기 대신</span></h5><dl class="kv"><div><dt>유산소</dt><dd>${c.cardio}</dd></div>${c.fit.length?`<div><dt>맞춤 운동</dt><dd>${li(c.fit)}</dd></div>`:''}${c.extra?`<div><dt>꼭 기억</dt><dd>${c.extra}</dd></div>`:''}</dl></div></div>
+      <div class="step ret"><span class="num">✓</span><div><h5>다시 달리기</h5><p style="margin:0;font-size:14px">${c.ret}</p></div></div>
+    </div>
+    <div class="flag"><h4>이럴 땐 병원에 가세요</h4>${c.flag}</div>
+    ${book}
+  </article>`;
+  const r=document.getElementById('painR');
+  if(r){const o=document.getElementById('painO'),m=document.getElementById('painM');
+    const upd=()=>{const v=+r.value;o.textContent=v;
+      if(v<=2){m.className='msg m-ok';m.textContent='0~2점: 계속 달려도 괜찮아요. 다음 날 아침 상태를 확인해요.'}
+      else if(v<=4){m.className='msg m-mid';m.textContent='3~4점: 거리와 속도를 줄여요. 다음 날 더 아프면 쉬어요.'}
+      else{m.className='msg m-stop';m.textContent='5점 이상: 멈추고 걸어서 돌아오세요. 아래 1단계부터 시작해요.'}};
+    r.addEventListener('input',upd);upd();}
+  reveal();
+}
+function reveal(){if(innerWidth<880)out.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+document.getElementById('backBtn').onclick=closeRegion;
+document.querySelectorAll('#quick button').forEach(b=>b.onclick=()=>{activePt=null;draw();setHead();showCard(b.dataset.card,'빠른 찾기')});
+const info=document.getElementById('info'),ib=document.getElementById('infoBtn');
+ib.onclick=()=>{info.hidden=!info.hidden;ib.setAttribute('aria-expanded',!info.hidden);if(!info.hidden&&innerWidth<880)info.scrollIntoView({behavior:reduce?'auto':'smooth'})};
+const banner=document.getElementById('banner');
+try{if(localStorage.getItem('rundoc.ok')==='1')banner.hidden=true}catch(e){}
+document.getElementById('bannerX').onclick=()=>{banner.hidden=true;try{localStorage.setItem('rundoc.ok','1')}catch(e){}};
+setView('front');
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "런닥",
+  "short_name": "런닥",
+  "description": "러너를 위한 주치의: 아픈 부위를 누르면 왜 아픈지, 어떻게 관리할지 알려 줘요",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121110",
+  "theme_color": "#121110",
+  "icons": [
+    {"src": "icons/icon-192-v3.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512-v3.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/maskable-512-v3.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
