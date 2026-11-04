@@ -45,7 +45,7 @@ header svg{height:44px;width:auto}
 .hbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink2)}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:18px}
 .mapcard{padding:12px}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--map);border-radius:12px;padding:4px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--map);border-radius:12px;padding:4px}
 .tabs button{border:0;background:transparent;border-radius:9px;padding:7px 0;font-size:14px;color:var(--ink2)}
 .tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .maphead{display:flex;align-items:center;justify-content:space-between;min-height:40px;margin-top:8px}
@@ -71,7 +71,16 @@ header svg{height:44px;width:auto}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;background:var(--surface);color:var(--ink2)}
 button.chip{color:var(--ink)}
-.quick{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px}
+.sys{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.sys h3{margin:0;font-size:15px;font-weight:600}
+.sys p{margin:0;font-size:12.5px;color:var(--ink3)}
+.quick{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.quick button.red{border-color:var(--danger);color:var(--danger);background:var(--danger-soft);font-weight:600}
+.call{margin-top:14px;padding:12px;border-radius:12px;background:var(--danger-soft);color:var(--danger)}
+.call h4{margin:0 0 4px;font-size:14px;font-weight:600}
+.call ul,.sec ul{margin:0;padding-left:18px}
+.call li{color:var(--ink)}
+.also{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .quick button{border:1px solid var(--coral);color:var(--coral-ink);background:var(--coral-soft);border-radius:999px;padding:5px 12px;font-size:13px}
 .side{display:grid;gap:12px}
 .empty{padding:22px 20px}
@@ -147,6 +156,7 @@ button.chip{color:var(--ink)}
     <div class="tabs" role="group" aria-label="보기">
       <button data-v="front" aria-pressed="true">앞</button>
       <button data-v="back" aria-pressed="false">뒤</button>
+      <button data-v="side" aria-pressed="false">옆</button>
       <button data-v="sole" aria-pressed="false">발바닥</button>
     </div>
     <div class="maphead">
@@ -158,8 +168,10 @@ button.chip{color:var(--ink)}
     <p class="hint" id="hint">파란 원을 눌러 아픈 부위를 고르세요</p>
     <div class="plist" id="plist"></div>
     <div class="others" id="others" hidden></div>
-    <div class="quick" id="quick">
-      <button data-card="cramp">달리다 쥐가 났어요</button>
+    <div class="sys">
+      <h3>몸 전체 증상</h3>
+      <p>한 곳을 누르기 어려운 증상은 여기서 골라요</p>
+      <div class="quick" id="quick"></div>
     </div>
   </section>
 
@@ -189,11 +201,28 @@ button.chip{color:var(--ink)}
 </div>
 
 <script>
-const IMG={front:'img/front.jpg',back:'img/back.jpg',sole:'img/sole.jpg'};
+const IMG={front:'img/front.jpg',back:'img/back.jpg',side:'img/side.jpg',sole:'img/sole.jpg'};
 const W=848,H=1264;
 const zv=(cx,cy,w)=>[cx-w/2,cy-w*H/W/2,w,w*H/W];
+const HEADQ={ask:'어떤 두통이에요?',o:[['달리는 중이나 끝난 뒤 머리가 욱신거려요','headache'],['갑자기 벼락 치듯 심하거나, 말이 어눌하고 한쪽 힘이 빠져요','thunder'],['물을 많이 마셨는데 두통과 메스꺼움이 있어요','hypona']]};
+const NAUQ={ask:'언제 그래요?',o:[['달리는 중 속이 울렁거려요','nausea'],['덥고 어지러우면서 메스꺼워요','heat'],['대회 뒤 물을 많이 마셨는데 두통·메스꺼움·손발 부음','hypona']]};
 const VIEWS={
 front:{vb:[0,0,W,H],regions:[
+ {id:'head',name:'머리',c:[430,100,40],vb:zv(430,150,280),others:[],pts:[
+  Object.assign({x:430,y:70,l:'머리 전체 · 이마'},HEADQ),
+  {x:392,y:118,l:'관자놀이',c:'headache'}]},
+ {id:'shoulder',name:'목 · 어깨',c:[322,262,40],vb:zv(400,270,400),others:[],pts:[
+  {x:395,y:228,l:'목 옆',c:'neck'},
+  {x:300,y:275,l:'어깨 앞',c:'neck'}]},
+ {id:'chest',name:'가슴',c:[430,322,40],vb:zv(430,340,320),others:[],pts:[
+  {x:430,y:318,l:'가슴 가운데',c:'chestpain'},
+  {x:368,y:333,l:'젖꼭지',c:'nipple'}]},
+ {id:'belly',name:'옆구리 · 배',c:[430,455,44],vb:zv(430,460,340),others:[],pts:[
+  {x:338,y:432,l:'옆구리 (갈비뼈 아래)',c:'stitch'},
+  {x:522,y:432,l:'반대쪽 옆구리',c:'stitch'},
+  {x:430,y:492,l:'배 가운데',ask:'어떤 느낌이에요?',o:[['배가 쥐어짜듯 아프고 화장실이 급해요','gi'],['속이 울렁거리고 토할 것 같아요','nausea']]}]},
+ {id:'hand',name:'손',c:[212,665,32],vb:zv(212,650,200),others:[],pts:[
+  {x:212,y:655,l:'손이 붓고 저려요',c:'hand'}]},
  {id:'hip',name:'골반 · 고관절',c:[368,610,46],vb:zv(372,615,300),others:['천장관절 통증','건초염·근육 손상','대전자 점액낭염','피로골절','관절와순 손상','고관절 관절염'],pts:[
   {x:352,y:598,l:'고관절 앞, 사타구니 위',c:'iliopsoas'},
   {x:408,y:668,l:'사타구니 안쪽',c:'adductor'},
@@ -219,6 +248,10 @@ front:{vb:[0,0,W,H],regions:[
   {x:333,y:1228,l:'발가락 사이',c:'morton'}]}
 ]},
 back:{vb:[0,0,W,H],regions:[
+ {id:'neckb',name:'목 · 어깨',c:[430,245,44],vb:zv(430,260,360),others:[],pts:[
+  {x:430,y:182,l:'목 뒤',c:'neck'},
+  {x:352,y:238,l:'어깨 위 (승모근)',c:'neck'},
+  {x:395,y:330,l:'날개뼈 사이',c:'neck'}]},
  {id:'lowback',name:'허리',c:[430,480,46],vb:zv(430,480,280),others:[],pts:[
   {x:430,y:505,l:'허리 아래 가운데',c:'lbp'},
   {x:384,y:455,l:'허리 옆 근육',c:'lbp'},
@@ -238,16 +271,110 @@ back:{vb:[0,0,W,H],regions:[
   {x:356,y:1125,l:'뒤꿈치 위 2~6cm',c:'achilles'},
   {x:352,y:1188,l:'힘줄이 뒤꿈치에 붙는 곳',c:'achilles'}]}
 ]},
+side:{vb:[0,0,W,H],regions:[
+ {id:'flank',name:'옆구리',c:[470,468,32],vb:zv(445,470,300),others:[],pts:[
+  {x:478,y:462,l:'갈비뼈 아래 옆구리',c:'stitch'}]},
+ {id:'hipS',name:'골반 바깥',c:[388,622,44],vb:zv(395,620,290),others:['천장관절 통증','관절와순 손상'],pts:[
+  {x:372,y:572,l:'골반 바깥 위쪽',c:'glutmed'},
+  {x:388,y:640,l:'옆으로 툭 튀어나온 뼈',ask:'어떻게 아파요?',o:[['그쪽으로 누우면 아프고, 누르면 아파요','troch'],['움직일 때 "딱" 소리가 나요','snapping']]},
+  {x:408,y:672,l:'허벅지 바깥 위',c:'tfl'}]},
+ {id:'itb',name:'허벅지 바깥 (장경인대)',c:[418,782,40],vb:zv(415,790,280),others:[],pts:[
+  {x:410,y:730,l:'허벅지 바깥 띠 위쪽',c:'tfl'},
+  {x:424,y:830,l:'허벅지 바깥 띠 아래쪽',c:'itbs'}]},
+ {id:'kneeS',name:'무릎 옆',c:[425,920,30],vb:zv(422,925,180),others:['반월상 연골판 파열'],pts:[
+  {x:428,y:915,l:'무릎 바깥',c:'itbs'},
+  {x:458,y:903,l:'무릎 앞',c:'pfps'},
+  {x:392,y:930,l:'무릎 뒤 오금',c:'baker'}]},
+ {id:'legS',name:'정강이 · 종아리 바깥',c:[392,1040,40],vb:zv(392,1040,240),others:[],pts:[
+  {x:405,y:1005,l:'정강이 바깥 근육',ask:'언제 아파요?',o:[['달리다 보면 터질 듯 조이고 저려요','cecs'],['내리막 뒤 발끝 들 때 당겨요','tibant']]},
+  {x:372,y:990,l:'종아리',c:'calf'},
+  {x:402,y:1088,l:'종아리 바깥 아래 뼈 한 점',c:'fibsf'}]},
+ {id:'ankleS',name:'발목 · 발 바깥',c:[408,1180,34],vb:zv(420,1180,210),others:['족근관 증후군','종골 피로골절'],pts:[
+  {x:418,y:1172,l:'바깥 복숭아뼈 앞',c:'sprain'},
+  {x:390,y:1160,l:'바깥 복숭아뼈 뒤',c:'peroneal'},
+  {x:364,y:1145,l:'아킬레스건',c:'achilles'},
+  {x:456,y:1217,l:'발 바깥 가운데 뼈',c:'mt5'}]}
+]},
 sole:{vb:[0,0,W,H],regions:null,others:['족근관 증후군','종골 피로골절','부주상골 동통 증후군'],pts:[
   {x:345,y:1000,l:'뒤꿈치 안쪽 앞',c:'pf'},
   {x:425,y:1110,l:'뒤꿈치 가운데',ask:'언제 제일 아파요?',o:[['아침 첫발 디딜 때 찌르듯','pf'],['하루 종일 멍든 것처럼 욱신','heelpad']]},
   {x:285,y:700,l:'발 아치 안쪽',c:'pf'},
   {x:525,y:330,l:'3·4번째 발가락 사이',c:'morton'},
   {x:425,y:455,l:'발 앞쪽 뼈 한 곳',c:'metsf'},
-  {x:298,y:115,l:'발톱 · 물집 · 굳은살',c:'skin'}]}
+  {x:298,y:115,l:'발톱 · 물집 · 굳은살',c:'skin'},
+  {x:622,y:285,l:'새끼발가락',ask:'어디가, 어떻게 아파요?',o:[['새끼발가락 옆 튀어나온 뼈가 신발에 눌려 아파요','bunionette'],['발가락 끝·발톱·굳은살이 아파요','skin'],['발 바깥 가운데 뼈가 붓고 디딜 때 아파요','mt5']]},
+  {x:648,y:640,l:'발 바깥 가운데',c:'mt5'}]}
 };
 
 const C={
+neck:{n:'목 · 어깨 뭉침',a:'',feel:'장거리를 달린 뒤 목, 어깨, 날개뼈 사이가 뻐근하고 무거워요. 달리는 중에 어깨가 점점 올라가 있기도 해요.',why:'팔을 흔들 때 어깨에 힘이 들어가 올라가거나, 주먹을 꽉 쥐거나, 지치면서 고개가 앞으로 빠지면 목과 어깨 근육이 계속 긴장해요.',
+ home:'따뜻한 찜질, 마사지볼로 어깨 위·날개뼈 사이 풀기.',regen:'보통 필요 없어요.',cardio:'평소대로 달려도 괜찮아요. 아프면 파워 워킹',fit:['어깨 으쓱 올렸다 툭 떨어뜨리기 10번','목 옆 스트레칭 (귀를 어깨 쪽으로)','문틀에 팔 대고 가슴 열기 스트레칭','밴드 당기기 (날개뼈 모으기)'],extra:'달리면서: 어깨 힘을 빼고 내려요. 주먹은 달걀을 쥔 듯 가볍게, 시선은 20~30m 앞으로.',ret:'바로 달려도 돼요. 자세만 신경 써요.',flag:'팔로 저림이 내려가거나 힘이 빠질 때, 2주 넘게 계속될 때'},
+nipple:{n:'젖꼭지 쓸림',a:'러너스 니플',feel:'장거리 뒤 젖꼭지가 따갑고, 피가 나기도 해요.',why:'땀에 젖은 셔츠가 수천 번 문질러서 생겨요. 면 티셔츠, 하프·풀코스에서 흔해요.',
+ home:'깨끗이 씻고 연고를 바른 뒤 밴드로 덮기.',regen:'해당 없어요.',cardio:'다 나을 때까지 짧게, 보호하고 달리기',fit:[],extra:'예방: 달리기 전 니플 패치나 바셀린, 땀이 잘 마르는 기능성 옷.',ret:'보호하면 바로 가능.',flag:'붉게 붓고 열이 나거나 고름이 나올 때 (감염)',short:true},
+stitch:{n:'옆구리 결림',a:'',feel:'달리는 중 갈비뼈 바로 아래 옆구리가 찌르듯 아파요. 오른쪽에 더 많고, 속도를 줄이면 나아져요.',why:'달리기 직전에 먹거나 마신 것, 얕고 빠른 호흡 때문에 배 안의 막과 횡격막이 자극받아 생긴다고 봐요. 초보 러너에게 특히 흔해요.',
+ home:'속도를 줄이거나 걸어요. 아픈 곳을 손으로 지그시 누르고, 숨을 길게 내쉬어요. 상체를 살짝 숙이거나 아픈 쪽 반대 팔을 머리 위로 올려 옆구리를 늘려요.',regen:'해당 없어요.',cardio:'멈추면 대부분 몇 분 안에 사라져요',fit:['플랭크, 사이드 플랭크 (코어 강화)','배로 깊게 숨 쉬는 연습'],extra:'예방: 달리기 1~2시간 전에는 많이 먹지 않기, 달리는 중 물은 조금씩.',ret:'통증이 사라지면 바로 가능.',flag:'멈춰도 계속 아프거나, 열·구토가 같이 있을 때 (배 속 다른 문제 확인)'},
+hand:{n:'손 부음 · 저림',a:'',feel:'장거리를 달리면 손가락이 붓고 반지가 꽉 끼거나, 손이 저려요.',why:'팔을 아래로 오래 흔들면 피가 손에 몰리고, 더운 날엔 혈관이 넓어져 더 잘 부어요. 대부분 쉬면 금방 빠져요.',
+ home:'가끔 팔을 머리 위로 올리기, 주먹을 쥐었다 펴기. 장거리에선 반지 빼고 달리기.',regen:'해당 없어요.',cardio:'평소대로 괜찮아요',fit:[],ret:'바로 가능.',flag:'손뿐 아니라 얼굴·몸까지 붓고 두통·메스꺼움이 있으면 저나트륨혈증 의심. 한쪽 팔이 저리면서 가슴 통증이 있으면 바로 119',short:true},
+troch:{n:'대전자 점액낭염',a:'골반 바깥 뼈 통증',feel:'골반 옆 툭 튀어나온 뼈를 누르면 아프고, 그쪽으로 누우면 아파요. 계단 오를 때도 아파요.',why:'뼈와 힘줄 사이의 쿠션 주머니(점액낭)가 반복해서 눌리고 쓸려 자극받아요. 중둔근 힘줄 문제와 함께 오는 경우가 많아요.',
+ home:'아픈 쪽으로 눕지 않기 (무릎 사이 베개), 다리 꼬지 않기, 냉찜질.',regen:'오래가면 체외충격파를 쓰기도 해요.',cardio:'수영, 수중 달리기, 평지 파워 워킹',fit:['클램쉘','사이드 플랭크','브릿지'],ret:'한 발 서기와 계단이 아프지 않으면.',flag:'6주 넘게 계속되거나, 붉게 붓고 열이 날 때',short:true},
+peroneal:{n:'비골건건염',a:'',feel:'바깥 복숭아뼈 뒤아래가 아프고 붓기도 해요. 발을 바깥으로 돌리거나 기울어진 길에서 심해요.',why:'발 바깥을 받치는 힘줄 두 개가 복숭아뼈 뒤를 돌아가는데, 반복해서 쓸리면 자극받아요. 발목을 접질린 뒤, 기울어진 길을 많이 달린 뒤 잘 생겨요.',
+ home:'거리 줄이기, 평평한 길로 달리기, 냉찜질.',regen:'오래가면 체외충격파를 쓰기도 해요.',cardio:'자전거, 수영',fit:['밴드로 발 바깥으로 밀기','한 발 서기 30초','카프 레이즈'],ret:'한 발 까치발과 깡충 뛰기가 아프지 않으면.',flag:'뚝 소리가 나거나 힘줄이 복숭아뼈 위로 튀어나오는 느낌이 들 때',short:true},
+fibsf:{n:'비골 피로골절',a:'의심',feel:'종아리 바깥 아래쪽 뼈 한 점을 누르면 아파요. 달릴수록 심해져요.',why:'정강이 피로골절과 같은 원리로, 반복 충격이 쌓여 바깥쪽 가는 뼈에 아주 작은 금이 생겨요. 정강이뼈보다는 잘 낫는 편이에요.',
+ home:'달리기를 멈추세요.',regen:'해당 없어요. 의사 치료를 따르세요.',cardio:'의사가 허락한 범위에서 수영, 자전거',fit:[],ret:'의사 확인 후 (보통 4~6주).',flag:'뼈 한 점이 아프면 병원에서 확인',urgent:'달리기를 멈추고 병원에 가세요',short:true},
+mt5:{n:'5번째 발가락뼈 피로골절',a:'존스 골절 의심',feel:'발 바깥 가운데(새끼발가락 뼈 뒤쪽)가 아프고 붓고, 디딜 때 아파요.',why:'새끼발가락으로 이어지는 긴 뼈에 반복 충격이 쌓여 생겨요. 이 자리는 피가 잘 안 가서 잘 붙지 않는 곳이라 빨리 확인하는 게 중요해요.',
+ home:'달리기를 멈추고, 아픈 발로 오래 서 있지 않기.',regen:'해당 없어요. 의사 치료를 따르세요.',cardio:'의사가 허락한 범위에서 수영, 상체 운동',fit:[],ret:'의사 확인 후. 오래 걸리는 경우가 많아요.',flag:'발 바깥 뼈가 붓고 누르면 아프면 바로 병원',urgent:'잘 붙지 않는 자리라 바로 병원에 가세요',short:true},
+bunionette:{n:'소건막류',a:'새끼발가락 쪽 무지외반',feel:'새끼발가락 옆 뼈가 튀어나와 신발에 눌리고, 붉게 붓고 아파요.',why:'앞이 좁은 신발에 새끼발가락 쪽이 계속 눌려서 생겨요. 발 모양 때문에 타고나는 경우도 있어요.',
+ home:'앞코가 넓은 신발로 바꾸기, 튀어나온 곳에 보호 패드, 아프면 냉찜질.',regen:'해당 없어요. 계속 아프거나 모양이 심해지면 의사와 상의해요.',cardio:'자전거, 수영',fit:['발가락 벌리기','종아리 스트레칭'],ret:'신발을 바꾸고 아프지 않으면.',flag:'붉게 붓고 열이 나거나, 모양이 점점 심해질 때',short:true},
+headache:{sys:true,n:'운동 중 · 후 두통',a:'',urgent:null,feel:'달리는 중이나 끝난 뒤 머리 양쪽이나 전체가 욱신거려요.',
+ now:['멈추고 그늘이나 시원한 곳에서 쉬어요','물과 전해질(이온음료)을 조금씩 마셔요','목·어깨를 풀어 줘요'],
+ call:['갑자기 벼락 치듯 평생 처음 겪는 심한 두통','말이 어눌하거나, 한쪽 팔다리에 힘이 빠지거나, 앞이 잘 안 보일 때','목이 뻣뻣하고 열이 나거나, 정신이 흐려질 때'],
+ why:'가장 흔한 원인은 탈수와 더위예요. 힘든 운동 자체로 생기는 운동성 두통, 평소 마시던 커피를 안 마신 날, 목·어깨 긴장도 원인이 돼요.',
+ prev:['더운 날은 페이스를 낮추고 물을 미리 마셔요','평소 커피를 마시면 달리기 날에도 비슷하게','목·어깨 힘 빼고 달리기'],
+ ret:'두통이 사라지면 가볍게. 힘든 운동 때마다 반복되면 병원에서 확인해요.',also:[['물을 많이 마셨는데 메스꺼워요','hypona'],['목 · 어깨 뭉침','neck']]},
+thunder:{sys:true,n:'갑자기 생긴 심한 두통',a:'',urgent:'지금 바로 119에 전화하세요',feel:'벼락 치듯 갑자기 아주 심한 두통이 오거나, 말이 어눌해지고 한쪽 힘이 빠져요.',
+ now:['달리기를 멈추고 앉거나 누워요','바로 119에 전화해요','혼자 있지 말고 주변 사람에게 알려요'],
+ call:['이 카드에 해당하면 모두 119'],why:'뇌혈관 문제일 수 있어서, 시간이 지날수록 위험해져요. 기다리지 말고 바로 응급실로 가야 해요.',prev:[],ret:'의사 확인 후.'},
+hypona:{sys:true,n:'저나트륨혈증',a:'물 중독',urgent:'물을 더 마시지 마세요. 의료 텐트나 병원으로',feel:'대회 뒤 물을 많이 마셨는데 두통, 메스꺼움, 구토가 있고 손발이나 얼굴이 부어요. 정신이 멍해지기도 해요.',
+ now:['물을 더 마시지 마세요','짠 음식이나 전해질 음료는 조금 괜찮아요','대회장이면 의료 텐트로 가요'],
+ call:['정신이 흐려지거나 헷갈려 할 때','계속 토하거나 경련이 날 때'],
+ why:'땀으로 소금이 빠져나간 상태에서 맹물만 많이 마시면 피 속 나트륨이 너무 묽어져요. 4시간 넘게 걸리는 느린 마라톤 주자, 물 스테이션마다 다 마시는 사람에게 생기기 쉬워요.',
+ prev:['목마를 때 마시기 (스테이션마다 억지로 마시지 않기)','장거리에선 맹물만 말고 전해질 음료도','달리기 전후 몸무게를 재서 늘었으면 너무 많이 마신 거예요'],ret:'의사 확인 후.'},
+nausea:{sys:true,n:'메스꺼움 · 구토',a:'',feel:'달리는 중이나 결승선 뒤 속이 울렁거리고 토할 것 같아요.',
+ now:['속도를 줄이고 걸어요','시원한 곳에서 쉬어요','물이나 이온음료를 한 모금씩 천천히'],
+ call:['정신이 흐려지거나, 몸이 아주 뜨거울 때 (열사병)','물을 많이 마셨는데 두통·부음이 같이 있을 때 (저나트륨혈증)','계속 토해서 물도 못 마실 때'],
+ why:'힘들게 달리면 피가 근육으로 몰려 위가 일을 못 해요. 직전 식사, 젤·당을 한꺼번에 많이 먹었을 때, 더위와 탈수도 원인이에요.',
+ prev:['달리기 2~3시간 전에 소화 잘 되는 음식','대회 때 먹을 젤은 훈련 때 미리 연습','더운 날은 페이스 낮추기'],ret:'속이 편해지면 가볍게.',also:[['너무 덥고 몸이 이상해요','heat'],['물을 많이 마셨는데 메스꺼워요','hypona']]},
+dizzy:{sys:true,n:'어지러움',a:'',feel:'결승선을 지나 멈추자마자, 또는 달리는 중에 어지럽고 쓰러질 것 같아요.',
+ now:['결승 직후라면 갑자기 멈추지 말고 천천히 걸어요','어지러우면 바로 누워 다리를 높이 올려요','물과 당(젤·주스)을 조금 먹어요'],
+ call:['달리는 중에 쓰러지거나 정신을 잃었을 때','가슴 통증, 두근거림, 숨참이 같이 있을 때','정신이 흐려지거나 몸이 아주 뜨거울 때'],
+ why:'달리다 갑자기 멈추면 다리에 몰렸던 피가 심장으로 잘 안 돌아와 혈압이 떨어져요. 탈수, 저혈당, 더위도 원인이에요.',
+ prev:['결승선 뒤 5~10분은 걸으며 마무리','장거리엔 물과 당 챙기기'],ret:'완전히 괜찮아진 뒤. 달리는 중 쓰러졌다면 꼭 병원 검사 후.',also:[['힘이 풀리고 식은땀','hypo'],['너무 덥고 몸이 이상해요','heat']]},
+chestpain:{sys:true,n:'가슴 통증 · 답답함',a:'',urgent:'바로 멈추고 119에 전화하세요',feel:'가슴을 쥐어짜거나 누르는 것처럼 아프고 답답해요. 팔, 턱, 등으로 퍼지거나 숨이 차고 식은땀이 나기도 해요.',
+ now:['달리기를 바로 멈추고 앉아요','119에 전화해요. 나아지는지 기다리지 마세요','주변 사람에게 알리고, 근처에 자동심장충격기(AED)가 있는지 찾아 달라고 해요'],
+ call:['가슴 통증·답답함은 모두 119'],
+ why:'심장 문제일 수 있어요. 젖꼭지 쓸림이나 옆구리 결림처럼 덜 위험한 원인도 있지만, 가슴 한가운데가 답답하면 병원에서 판단해야 해요.',
+ prev:['40세 넘어 마라톤을 준비한다면 심장 검진 받기','가족 중 심장병이 있으면 꼭 의사와 상의','감기·몸살 땐 대회 나가지 않기'],ret:'병원 검사 후 의사 확인.'},
+breath:{sys:true,n:'숨이 너무 차요',a:'',feel:'평소보다 숨이 너무 차고, 쌕쌕거리거나 기침이 나요.',
+ now:['대화할 수 있는 속도로 낮추거나 걸어요','코로 들이마시고 입으로 길게 내쉬어요','찬 공기나 미세먼지가 심하면 실내로'],
+ call:['가슴 통증이 같이 있을 때','입술이 파래지거나, 쉬어도 숨이 돌아오지 않을 때','말을 이어서 할 수 없을 때'],
+ why:'페이스가 너무 빠른 게 가장 흔해요. 달릴 때 쌕쌕거림과 기침이 반복되면 운동 유발 천식일 수 있고, 빈혈이 있어도 숨이 쉽게 차요.',
+ prev:['처음 10분은 천천히 몸 풀기','겨울엔 마스크나 넥워머로 찬 공기 막기','미세먼지 나쁜 날은 실내 운동'],ret:'숨이 편해지면. 자주 반복되면 호흡기 검사.'},
+heat:{sys:true,n:'열사병 · 열탈진',a:'너무 덥고 몸이 이상해요',urgent:'말이 이상하거나 헷갈려 하면 열사병 — 바로 119',feel:'더운 날 땀이 쏟아지고 어지럽고 메스꺼워요. 더 심하면 몸이 아주 뜨겁고, 말이 이상해지거나 헷갈려 해요.',
+ now:['바로 멈추고 그늘이나 시원한 곳으로','옷을 느슨하게 하고, 찬물 적신 수건으로 몸을 식혀요','정신이 멀쩡하면 물·이온음료를 조금씩'],
+ call:['말이 어눌하거나 헷갈려 하고, 이상하게 행동할 때 (열사병)','쓰러지거나 경련이 날 때','119를 기다리는 동안 목·겨드랑이·사타구니에 얼음이나 찬물'],
+ why:'몸이 만드는 열을 땀으로 다 식히지 못하면 체온이 계속 올라가요. 열탈진은 쉬면 회복되지만, 열사병은 뇌와 장기가 다칠 수 있는 응급 상황이에요.',
+ prev:['더운 날은 이른 아침이나 저녁에','기온이 높으면 페이스를 확 낮추기','더위에 2주 정도 몸을 적응시키기','밝은 색 얇은 옷, 모자'],ret:'열탈진은 하루 이틀 쉬고. 열사병이었다면 의사 확인 후.'},
+hypo:{sys:true,n:'저혈당',a:'벽에 부딪힘 · 봉크',feel:'다리 힘이 갑자기 풀리고 식은땀, 손 떨림, 어지러움이 와요. 갑자기 배가 고프고 머리가 멍해져요.',
+ now:['멈추고 바로 당을 먹어요 (젤, 사탕, 주스, 이온음료)','10~15분 쉬고 나아지지 않으면 한 번 더','천천히 걸어서 돌아가요'],
+ call:['정신이 흐려지거나 삼키기 어려울 때 (억지로 먹이지 마세요)','당을 먹어도 계속 나빠질 때'],
+ why:'장거리에서 몸에 저장된 탄수화물을 다 써 버리면 생겨요. 공복 달리기, 30km 이후 마라톤 후반에 많아요. 당뇨약을 먹는다면 더 조심해야 해요.',
+ prev:['90분 넘게 달리면 30~45분마다 젤이나 당','장거리 전날과 당일 아침에 탄수화물 충분히','당뇨약을 먹는다면 의사와 상의'],ret:'회복되면 다음 날부터.'},
+gi:{sys:true,n:'달리기 중 배탈',a:'러너 설사',feel:'달리는 중 배가 쥐어짜듯 아프고 화장실이 급해요.',
+ now:['속도를 줄이거나 걸어요','화장실에 들르세요','물을 조금씩'],
+ call:['피가 섞인 변이 나올 때','배가 아주 심하게 아프고 열이 날 때','멈춰도 계속 심하게 아플 때'],
+ why:'달릴 때 몸이 흔들리고 장으로 가는 피가 줄어서 생겨요. 직전 식사, 섬유질·유제품·카페인, 젤이 원인이 되기도 해요.',
+ prev:['달리기 2~3시간 전에 소화 잘 되는 음식','대회 전날 섬유질·기름진 음식 줄이기','대회 코스의 화장실 위치 미리 알아 두기'],ret:'배가 편해지면.'},
+
 itbs:{n:'장경인대 마찰 증후군',a:'ITBS · 장경인대염',feel:'달린 지 몇 km 지나면 무릎 바깥이 찌릿하게 쓸려요. 무릎을 30도쯤 굽혔다 펼 때 아픈 게 특징이고, 내리막에서 심해요.',why:'장경인대는 엉덩이에서 무릎 바깥을 지나 정강이뼈에 붙는 두꺼운 근막이에요. 무릎을 30도쯤 굽힐 때 허벅지뼈 바깥과 가장 가깝게 닿아서, 굽혔다 펴기를 반복하면 자극이 쌓여요. 엉덩이 옆 근육이 약하거나 갑자기 거리를 늘려도 생겨요.',
  home:'3~5일 달리기 쉬기, 냉찜질. 다시 달릴 땐 통증 오기 전 거리까지만.',regen:'보통 필요 없어요. 3주 넘게 안 나으면 체외충격파를 쓰기도 해요.',cardio:'수영, 수중 달리기. 자전거도 무릎을 계속 굽혔다 펴니 아프지 않을 때만',fit:['클램쉘','사이드 플랭크','한 발 브릿지','엉덩이 옆·허벅지 바깥 폼롤러 (무릎 바로 위는 세게 누르지 않기)'],ret:'30분 빠르게 걷기와 계단이 아프지 않으면. 처음엔 평지에서 짧게.',flag:'걸을 때도 아프거나 3주 넘게 안 나을 때'},
 pfps:{n:'슬개대퇴 동통 증후군',a:'러너스 니',feel:'무릎뼈 뒤나 주변이 묵직하게 아파요. 계단 내려갈 때, 오래 앉았다 일어날 때, 내리막에서 심해져요.',why:'엉덩이와 허벅지 근육이 약하면 착지할 때 무릎이 안쪽으로 무너지고, 무릎뼈가 한쪽으로 눌려요. 갑자기 거리를 늘리거나 내리막을 많이 달려도 생겨요.',
@@ -349,19 +476,39 @@ function openRegion(r){region=r;activePt=null;draw();setHead();animVB(r.vb)}
 function closeRegion(){region=null;activePt=null;draw();setHead();animVB(VIEWS[view].vb)}
 function setView(v){view=v;region=null;activePt=null;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
   curVB=VIEWS[v].vb.slice();bd.setAttribute('viewBox',curVB.join(' '));draw();setHead();}
-function crumb(p){const V=VIEWS[view];const vn={front:'앞',back:'뒤',sole:'발바닥'}[view];return [vn,region?region.name:null,p.l].filter(Boolean).join(' · ')}
+function crumb(p){const V=VIEWS[view];const vn={front:'앞',back:'뒤',side:'옆',sole:'발바닥'}[view];return [vn,region?region.name:null,p.l].filter(Boolean).join(' · ')}
 function pick(i){
   activePt=i;const p=(region?region.pts:VIEWS[view].pts)[i];draw();setHead();
   if(p.c) showCard(p.c,crumb(p)); else showAsk(p);
 }
-function showAsk(p){
-  out.innerHTML=`<div class="ask"><div class="crumb">${crumb(p)}</div><h3>${p.ask}</h3><div class="opts">${p.o.map((o,j)=>`<button data-j="${j}">${o[0]}</button>`).join('')}</div></div>`;
-  out.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>showCard(p.o[b.dataset.j][1],crumb(p)+' · '+p.o[b.dataset.j][0]));
+function showAsk(p,cr){
+  cr=cr||crumb(p);
+  out.innerHTML=`<div class="ask"><div class="crumb">${cr}</div><h3>${p.ask}</h3><div class="opts">${p.o.map((o,j)=>`<button data-j="${j}">${o[0]}</button>`).join('')}</div></div>`;
+  out.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>showCard(p.o[b.dataset.j][1],cr+' · '+p.o[b.dataset.j][0]));
   reveal();
 }
 function li(a){return '<ul>'+a.map(x=>`<li>${x}</li>`).join('')+'</ul>'}
+function showSys(c,cr){
+  out.innerHTML=`<article class="card">
+    <div class="crumb">${cr||''}</div>
+    <h3>${c.n}</h3>${c.a?`<div class="aka">${c.a}</div>`:''}
+    ${c.urgent?`<div class="alert">⚠ ${c.urgent}</div>`:''}
+    <div class="sec"><h4>이런 증상이에요</h4><p>${c.feel}</p></div>
+    <div class="path">
+      <div class="step"><span class="num">1</span><div><h5>지금 바로</h5>${li(c.now)}</div></div>
+    </div>
+    <div class="call"><h4>이럴 땐 바로 119</h4>${li(c.call)}</div>
+    <div class="sec"><h4>왜 생길까</h4><p>${c.why}</p></div>
+    ${c.prev.length?`<div class="sec"><h4>다음엔 이렇게 예방해요</h4>${li(c.prev)}</div>`:''}
+    <div class="sec"><h4>다시 달리기</h4><p>${c.ret}</p></div>
+    ${c.also?`<div class="sec"><h4>비슷한 증상</h4><div class="also">${c.also.map(a=>`<button class="chip" data-go="${a[1]}">${a[0]}</button>`).join('')}</div></div>`:''}
+  </article>`;
+  out.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>showCard(b.dataset.go,'몸 전체 증상'));
+  reveal();
+}
 function showCard(id,cr){
   const c=C[id];
+  if(c.sys) return showSys(c,cr);
   const book='';
   out.innerHTML=`<article class="card">
     <div class="crumb">${cr||''}</div>
@@ -391,7 +538,10 @@ function showCard(id,cr){
 function reveal(){if(innerWidth<880)out.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
 document.getElementById('backBtn').onclick=closeRegion;
-document.querySelectorAll('#quick button').forEach(b=>b.onclick=()=>{activePt=null;draw();setHead();showCard(b.dataset.card,'빠른 찾기')});
+const QUICK=[{l:'두통',q:HEADQ},{l:'메스꺼움 · 구토',q:NAUQ},{l:'어지러움',c:'dizzy'},{l:'가슴 통증 · 답답함',c:'chestpain',red:1},{l:'숨이 너무 차요',c:'breath'},{l:'너무 덥고 몸이 이상해요',c:'heat'},{l:'힘이 풀리고 식은땀',c:'hypo'},{l:'배가 아프고 화장실 급해요',c:'gi'},{l:'달리다 쥐가 났어요',c:'cramp'}];
+const qEl=document.getElementById('quick');
+QUICK.forEach(q=>{const b=document.createElement('button');b.textContent=q.l;if(q.red)b.className='red';
+  b.onclick=()=>{activePt=null;draw();setHead();const cr='몸 전체 증상 · '+q.l;if(q.c)showCard(q.c,cr);else showAsk(q.q,cr)};qEl.appendChild(b)});
 const info=document.getElementById('info'),ib=document.getElementById('infoBtn');
 ib.onclick=()=>{info.hidden=!info.hidden;ib.setAttribute('aria-expanded',!info.hidden);if(!info.hidden&&innerWidth<880)info.scrollIntoView({behavior:reduce?'auto':'smooth'})};
 const banner=document.getElementById('banner');
