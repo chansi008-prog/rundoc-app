@@ -1,5 +1,5 @@
 // 런닥 서비스 워커: 앱 파일과 해부도를 저장해 두어 신호가 약한 곳(트랙·산길)에서도 열리게 한다
-const VERSION = "rundoc-v7";
+const VERSION = "rundoc-v8";
 const CORE = ["./", "index.html", "manifest.webmanifest", "img/front.jpg", "img/back.jpg", "img/side.jpg", "img/sole.jpg", "icons/icon-192-v3.png", "icons/icon-512-v3.png", "icons/apple-touch-icon-v3.png"];
 
 self.addEventListener("install", e => {
